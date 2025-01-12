@@ -1,27 +1,25 @@
 import pytesseract
-from PIL import Image
 import cv2 as cv
 import os
 import fitz
-import easyocr
 import re
 
 pytesseract.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
 image_directory = "C:/Users/Asus/Desktop/code/python/PdfExtractor/pages"
 
-pdffile = "کتاب مقدمه علم حقوق کاتوزیان.pdf"
+pdffile = "کتاب مدنی7.pdf"
 doc = fitz.open(pdffile)
 zoom = 4
 mat = fitz.Matrix(zoom, zoom)
-count = 0
 
-for p in doc:
-    count += 1
-for i in range(count):
-    val = f"image_{i+1}.png"
-    page = doc.load_page(i)
-    pix = page.get_pixmap(matrix=mat)
-    pix.save(val)
+output_directory = "pages"
+os.makedirs(output_directory, exist_ok=True)
+
+for i in range(len(doc)):
+    val = os.path.join(output_directory, f"image_{i+1}.png")
+    page = doc.load_page(i)  
+    pix = page.get_pixmap(matrix=mat) 
+    pix.save(val) 
 doc.close()
 
 output_file = "ocr_results.txt"
@@ -30,16 +28,21 @@ def sort_numerically(filename):
 
 def format_text(text):
     merged_text = " ".join(text.splitlines())
-    formatted_text = re.sub(r'\.\s*(\w)', r'.\n\1', merged_text)
-    return formatted_text
+    return re.sub(r'\.\s*(\w)', r'.\n\1', merged_text)
+
+def preprocess_image(image_path):
+    image = cv.imread(image_path, cv.IMREAD_GRAYSCALE)
+    image = cv.resize(image, None, fx=2, fy=2, interpolation=cv.INTER_CUBIC)
+    _, image = cv.threshold(image, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU)
+    return image
 
 with open(output_file, "w", encoding="utf-8") as f:
     for filename in sorted(os.listdir(image_directory), key=sort_numerically):
         file_path = os.path.join(image_directory, filename)
         
         if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff')):
-            image = cv.imread(file_path, 0)
-            img_text = pytesseract.image_to_string(image, lang="fas")
+            processed_image = preprocess_image(file_path)
+            img_text = pytesseract.image_to_string(processed_image, lang="fas", config="--psm 6")
             
             formatted_text = format_text(img_text)
             
