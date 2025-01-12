@@ -9,7 +9,6 @@ import re
 pytesseract.pytesseract.tesseract_cmd = "C:/Program Files/Tesseract-OCR/tesseract.exe"
 image_directory = "C:/Users/Asus/Desktop/code/python/PdfExtractor/pages"
 
-""""
 pdffile = "کتاب مقدمه علم حقوق کاتوزیان.pdf"
 doc = fitz.open(pdffile)
 zoom = 4
@@ -24,7 +23,7 @@ for i in range(count):
     pix = page.get_pixmap(matrix=mat)
     pix.save(val)
 doc.close()
-"""
+
 output_file = "ocr_results.txt"
 def sort_numerically(filename):
     return int(''.join(filter(str.isdigit, filename)))
